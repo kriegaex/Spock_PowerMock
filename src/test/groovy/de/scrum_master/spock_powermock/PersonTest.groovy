@@ -30,8 +30,6 @@ class PersonTest extends Specification {
     }
 
     def "Error when creating output file"() {
-        setup:
-        FileOutputStream fosMock = mock(FileOutputStream.class)
         when:
         whenNew(FileOutputStream.class).withArguments("mock.txt").thenThrow(IOException.class)
         person.writeToFile("mock.txt")
