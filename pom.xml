@@ -1,28 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <groupId>de.scrum_master.spock</groupId>
+    <artifactId>spock_powermock</artifactId>
+    <version>1.0-SNAPSHOT</version>
 
     <organization>
         <name>Scrum-Master.de - Agile Project Management</name>
         <url>http://scrum-master.de</url>
     </organization>
 
-    <groupId>de.scrum_master.spock</groupId>
-    <artifactId>spock_powermock</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <properties>
+        <powermock.version>1.6.5</powermock.version>
+        <junit.version>4.10</junit.version>
+    </properties>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.5.1</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF8</encoding>
                 </configuration>
             </plugin>
             <plugin>
@@ -47,24 +50,6 @@
                     </dependency>
                 </dependencies>
             </plugin>
-            <!--
-                The Spock Maven plugin is not compatible with Maven 3.
-                To use Spock with Maven 3, remove this plugin and make sure that your spec classes adhere
-                to Surefire's naming conventions (e.g. '*Test'). You can also configure Surefire to support
-                other naming conventions (e.g. '*Spec').
-            -->
-            <!--plugin>
-                <groupId>org.spockframework</groupId>
-                <artifactId>spock-maven</artifactId>
-                <version>0.7-groovy-2.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>find-specs</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin-->
             <plugin>
                 <groupId>org.dstovall</groupId>
                 <artifactId>onejar-maven-plugin</artifactId>
@@ -92,39 +77,96 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <properties>
-        <powermock.version>1.5.1</powermock.version>
-    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>2.0.5</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.spockframework</groupId>
+                <artifactId>spock-core</artifactId>
+                <version>0.7-groovy-2.0</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit-dep</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-core</artifactId>
+                <version>${powermock.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-api-mockito</artifactId>
+                <version>${powermock.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-module-junit4-rule-agent</artifactId>
+                <version>${powermock.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-classloading-xstream</artifactId>
+                <version>${powermock.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-module-junit4</artifactId>
+                <version>${powermock.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-module-junit4-rule</artifactId>
+                <version>${powermock.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.spockframework</groupId>
             <artifactId>spock-core</artifactId>
-            <version>0.7-groovy-2.0</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
+            <artifactId>powermock-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4-rule</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
+            <artifactId>powermock-module-junit4-rule-agent</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-classloading-xstream</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
+            <groupId>junit</groupId>
+            <artifactId>junit-dep</artifactId>
         </dependency>
     </dependencies>
+
 </project>
