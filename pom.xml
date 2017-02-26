@@ -13,28 +13,22 @@
   </organization>
 
   <properties>
-    <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
     <version.groovy-eclipse-compiler>2.9.2-01</version.groovy-eclipse-compiler>
     <version.groovy-eclipse-batch>2.4.3-01</version.groovy-eclipse-batch>
-    <version.groovy>2.4.1</version.groovy>
+    <version.junit>4.12</version.junit>
     <version.spock>1.0-groovy-2.4</version.spock>
-    <version.powermock>1.6.5</version.powermock>
-    <version.junit>4.10</version.junit>
+    <version.groovy>2.4.7</version.groovy>
+    <version.powermock>1.6.6</version.powermock>
   </properties>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.groovy</groupId>
-        <artifactId>groovy-eclipse-compiler</artifactId>
-        <version>${version.groovy-eclipse-compiler}</version>
-        <extensions>true</extensions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.5.1</version>
+        <version>3.6.0</version>
         <configuration>
           <source>${maven.compiler.source}</source>
           <target>${maven.compiler.target}</target>
@@ -55,31 +49,30 @@
         </dependencies>
       </plugin>
       <plugin>
-        <groupId>org.dstovall</groupId>
+        <groupId>org.codehaus.groovy</groupId>
+        <artifactId>groovy-eclipse-compiler</artifactId>
+        <version>${version.groovy-eclipse-compiler}</version>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>com.jolira</groupId>
         <artifactId>onejar-maven-plugin</artifactId>
         <version>1.4.4</version>
         <executions>
           <execution>
-            <configuration>
-              <onejarVersion>0.96</onejarVersion>
-              <mainClass>de.scrum_master.spock_powermock.Application</mainClass>
-              <attachToBuild>true</attachToBuild>
-            </configuration>
             <goals>
               <goal>one-jar</goal>
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <onejarVersion>0.96</onejarVersion>
+          <mainClass>de.scrum_master.spock_powermock.Application</mainClass>
+          <attachToBuild>true</attachToBuild>
+        </configuration>
       </plugin>
     </plugins>
   </build>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>onejar-maven-plugin.googlecode.com</id>
-      <url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
-    </pluginRepository>
-  </pluginRepositories>
 
   <dependencyManagement>
     <dependencies>
@@ -94,13 +87,6 @@
         <artifactId>spock-core</artifactId>
         <version>${version.spock}</version>
         <scope>test</scope>
-        <exclusions>
-          <!-- Use version from org.wildfly.bom:jboss-javaee-7.0-with-tools -->
-          <exclusion>
-            <groupId>junit</groupId>
-            <artifactId>junit-dep</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
