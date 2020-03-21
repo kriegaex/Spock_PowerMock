@@ -119,6 +119,12 @@
       </dependency>
       <dependency>
         <groupId>org.powermock</groupId>
+        <artifactId>powermock-api-easymock</artifactId>
+        <version>${version.powermock}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.powermock</groupId>
         <artifactId>powermock-module-junit4-rule-agent</artifactId>
         <version>${version.powermock}</version>
         <scope>test</scope>
@@ -168,6 +174,10 @@
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-api-mockito2</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-easymock</artifactId>
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
