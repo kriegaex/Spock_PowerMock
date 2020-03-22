@@ -15,7 +15,7 @@ import static org.powermock.api.easymock.PowerMock.*
 @PowerMockRunnerDelegate(Sputnik)
 @PrepareForTest(Person)
 class PersonEasyMockTest extends Specification {
-  private static Person person = new Person("Kriegisch", "Alexander", new Date(1971 - 1900, 5 - 1, 8))
+  private static Person person = new Person("Kriegisch", "Alexander", new GregorianCalendar(1971, 5 - 1, 8).getTime())
 
   def "Person properties"() {
     expect:
