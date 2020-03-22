@@ -1,20 +1,17 @@
 package de.scrum_master.spock_powermock
 
-
-import org.junit.runner.RunWith
+import org.junit.Rule
 import org.powermock.core.classloader.annotations.PrepareForTest
-import org.powermock.modules.junit4.PowerMockRunner
-import org.powermock.modules.junit4.PowerMockRunnerDelegate
-import org.spockframework.runtime.Sputnik
+import org.powermock.modules.junit4.rule.PowerMockRule
 import spock.lang.Specification
 
 import static org.easymock.EasyMock.expect
 import static org.powermock.api.easymock.PowerMock.*
 
-@RunWith(PowerMockRunner)
-@PowerMockRunnerDelegate(Sputnik)
 @PrepareForTest(Person)
 class PersonEasyMockTest extends Specification {
+  @Rule PowerMockRule powerMockRule = new PowerMockRule()
+
   private static Person person = new Person("Kriegisch", "Alexander", new GregorianCalendar(1971, 5 - 1, 8).getTime())
 
   def "Person properties"() {
