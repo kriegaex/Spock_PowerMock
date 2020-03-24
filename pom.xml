@@ -21,7 +21,6 @@
     <maven.compiler.target>1.8</maven.compiler.target>
 
     <version.junit>5.5.2</version.junit>
-    <version.junit-platform>1.5.2</version.junit-platform>
 
     <version.groovy>3.0.2</version.groovy>
     <version.groovy-eclipse-compiler>3.6.0-03</version.groovy-eclipse-compiler>
@@ -31,6 +30,8 @@
 
     <!-- TODO: Upgrade to 2.0.7 or whatever once the PR was merged and released, see https://github.com/powermock/powermock/pull/1043 -->
     <version.powermock>2.0.6-pr_1043</version.powermock>
+
+    <version.easymock>4.0.1</version.easymock>
 
   </properties>
 
@@ -65,18 +66,13 @@
         <version>${version.groovy-eclipse-compiler}</version>
         <extensions>true</extensions>
       </plugin>
+      <!--
+        Below version 2.22.0 Surefire will not execute Spock 2 tests,
+        but e.g Maven 3.5.2 and 3.6.0 use Surefire 2.12.4 by default.
+      -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M4</version>
-        <executions>
-          <execution>
-            <id>default-test</id>
-            <phase>test</phase>
-            <goals>
-              <goal>test</goal>
-            </goals>
-          </execution>
-        </executions>
+        <version>2.22.2</version>
       </plugin>
       <plugin>
         <groupId>com.jolira</groupId>
@@ -104,41 +100,8 @@
       <!-- Groovy -->
       <dependency>
         <groupId>org.codehaus.groovy</groupId>
-        <artifactId>groovy-all</artifactId>
+        <artifactId>groovy</artifactId>
         <version>${version.groovy}</version>
-        <type>pom</type>
-        <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-testng</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <!-- JUnit 5 Jupiter -->
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-engine</artifactId>
-        <version>${version.junit}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.vintage</groupId>
-        <artifactId>junit-vintage-engine</artifactId>
-        <version>${version.junit}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.platform</groupId>
-        <artifactId>junit-platform-engine</artifactId>
-        <version>${version.junit-platform}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.platform</groupId>
-        <artifactId>junit-platform-testkit</artifactId>
-        <version>${version.junit-platform}</version>
         <scope>test</scope>
       </dependency>
 
@@ -149,11 +112,21 @@
         <version>${version.spock}</version>
         <scope>test</scope>
       </dependency>
-      <!-- JUnit 4 compatibility layer is needed for @Rule PowermockRule -->
+      <!--
+        JUnit 4 compatibility layer is needed for @Rule PowermockRule.
+        Please keep even though reported as unused by dependency:analyze!
+      -->
       <dependency>
         <groupId>org.spockframework</groupId>
         <artifactId>spock-junit4</artifactId>
         <version>${version.spock}</version>
+        <scope>test</scope>
+      </dependency>
+      <!-- JUnit 4 version used by Spock, needed for @Rule PowermockRule -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.12</version>
         <scope>test</scope>
       </dependency>
 
@@ -178,24 +151,18 @@
         <version>${version.powermock}</version>
         <scope>test</scope>
       </dependency>
+      <!-- EasyMock version used by PowerMock -->
+      <dependency>
+        <groupId>org.easymock</groupId>
+        <artifactId>easymock</artifactId>
+        <version>${version.easymock}</version>
+        <scope>test</scope>
+      </dependency>
+
       <!-- JUnit 4 agent-based @Rule PowermockRule is the only working option in Spock 2 -->
       <dependency>
         <groupId>org.powermock</groupId>
         <artifactId>powermock-module-junit4-rule-agent</artifactId>
-        <version>${version.powermock}</version>
-        <scope>test</scope>
-      </dependency>
-      <!-- Dependency (option 1) for for @Rule PowermockRule -->
-      <dependency>
-        <groupId>org.powermock</groupId>
-        <artifactId>powermock-classloading-xstream</artifactId>
-        <version>${version.powermock}</version>
-        <scope>test</scope>
-      </dependency>
-      <!-- Dependency (option 2) for for @Rule PowermockRule -->
-      <dependency>
-        <groupId>org.powermock</groupId>
-        <artifactId>powermock-classloading-objenesis</artifactId>
         <version>${version.powermock}</version>
         <scope>test</scope>
       </dependency>
@@ -208,26 +175,7 @@
     <!-- Groovy -->
     <dependency>
       <groupId>org.codehaus.groovy</groupId>
-      <artifactId>groovy-all</artifactId>
-      <type>pom</type>
-    </dependency>
-
-    <!-- JUnit 5 Jupiter -->
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.vintage</groupId>
-      <artifactId>junit-vintage-engine</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-engine</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-testkit</artifactId>
+      <artifactId>groovy</artifactId>
     </dependency>
 
     <!-- Spock -->
@@ -235,10 +183,18 @@
       <groupId>org.spockframework</groupId>
       <artifactId>spock-core</artifactId>
     </dependency>
-    <!-- JUnit 4 compatibility layer is needed for @Rule PowermockRule -->
+    <!--
+      JUnit 4 compatibility layer is needed for @Rule PowermockRule.
+      Please keep even though reported as unused by dependency:analyze!
+    -->
     <dependency>
       <groupId>org.spockframework</groupId>
       <artifactId>spock-junit4</artifactId>
+    </dependency>
+    <!-- JUnit 4 version used by Spock, needed for @Rule PowermockRule -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
     </dependency>
 
     <!-- PowerMock -->
@@ -256,23 +212,16 @@
       <groupId>org.powermock</groupId>
       <artifactId>powermock-api-easymock</artifactId>
     </dependency>
+    <!-- EasyMock version used by PowerMock -->
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+    </dependency>
     <!-- JUnit 4 agent-based @Rule PowermockRule is the only working option in Spock 2 -->
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-module-junit4-rule-agent</artifactId>
     </dependency>
-    <!-- Dependency (option 1) for for @Rule PowermockRule -->
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-classloading-xstream</artifactId>
-    </dependency>
-    <!-- Dependency (option 2) for for @Rule PowermockRule -->
-<!--
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-classloading-objenesis</artifactId>
-    </dependency>
--->
 
   </dependencies>
 
