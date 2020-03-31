@@ -28,8 +28,8 @@
 
     <version.spock>2.0-M2-groovy-3.0</version.spock>
 
-    <!-- TODO: Upgrade to 2.0.7 or whatever once the PR was merged and released, see https://github.com/powermock/powermock/pull/1043 -->
-    <version.powermock>2.0.6-pr_1043</version.powermock>
+    <!-- 2.0.7 contains an important bufix making '@Rule PowerMockRule' usable from Spock -->
+    <version.powermock>2.0.7</version.powermock>
 
     <version.easymock>4.0.1</version.easymock>
 
