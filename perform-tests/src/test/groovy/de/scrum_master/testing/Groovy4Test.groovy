@@ -1,8 +1,29 @@
 package de.scrum_master.testing
 
+import org.spockframework.compiler.SpockTransform
+import org.spockframework.util.GroovyReleaseInfo
+import org.spockframework.util.SpockReleaseInfo
+import org.spockframework.util.VersionChecker
+import org.spockframework.util.VersionNumber
 import spock.lang.Specification
 
+import static org.spockframework.util.SpockReleaseInfo.isCompatibleGroovyVersion
+
 class Groovy4Test extends Specification {
+  def setupSpec() {
+    def groovyVersion = GroovyReleaseInfo.getVersion()
+    def disableVersionCheck = VersionChecker.DISABLE_GROOVY_VERSION_CHECK_PROPERTY_NAME
+    println "Groovy version = $groovyVersion"
+    println "$disableVersionCheck = ${System.getProperty(disableVersionCheck)}"
+    println "Is Groovy version compatible? ${isCompatibleGroovyVersion(groovyVersion)}"
+
+    // This should be executed automatically, but is not. Calling it manually, triggers the version check.
+    // new SpockTransform()
+
+    // This is what the SpockTransform constructor actually does. Calling it manually, triggers the version check.
+    // new VersionChecker().checkGroovyVersion("Xander")
+  }
+
   def "use switch expression"() {
     given:
     def i = 2
