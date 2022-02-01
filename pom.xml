@@ -3,9 +3,10 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>de.scrum_master.spock</groupId>
-  <artifactId>spock_powermock</artifactId>
+  <groupId>de.scrum-master.spock</groupId>
+  <artifactId>spock-powermock</artifactId>
   <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
 
   <organization>
     <name>Scrum-Master.de - Agile Project Management</name>
@@ -17,81 +18,239 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+    <!--
+      Enable automatic use of Parrot parser for Groovy-Eclipse in order to compile e.g. Groovy 3 Java-style lambdas.
+      Same as '<fork>true</fork>' for Maven Compiler and an alternative to '-Dgroovy.antlr4=true'. See also:
+        https://github.com/groovy/groovy-eclipse/issues/1107
+        https://github.com/groovy/groovy-eclipse/issues/1137
+    -->
+    <maven.compiler.fork>true</maven.compiler.fork>
 
-    <version.junit>5.5.2</version.junit>
+    <!--
+      Defined by build-helper:rootlocation.
+      Unfortunately, for IntelliJ IDEA we still need "-DprojectRootDir=..." in <projectRootDir>/.mvn/jvm.config.
+    -->
+    <!--suppress UnresolvedMavenProperty -->
+    <projectRootDir>${rootlocation}</projectRootDir>
 
-    <version.groovy>3.0.2</version.groovy>
-    <version.groovy-eclipse-compiler>3.6.0-03</version.groovy-eclipse-compiler>
-    <version.groovy-eclipse-batch>3.0.2-02</version.groovy-eclipse-batch>
+    <!-- See org.spockframework:spock-core, entry 'junit-bom' and then check the used platform in the JUnit BoM -->
+    <version.junit>5.8.1</version.junit>
+    <version.junit-platform>1.8.1</version.junit-platform>
 
-    <version.spock>2.0-M2-groovy-3.0</version.spock>
+    <version.testng>7.1.0</version.testng>
 
-    <!-- 2.0.7 contains an important bufix making '@Rule PowerMockRule' usable from Spock -->
-    <version.powermock>2.0.7</version.powermock>
+    <version.groovy>3.0.9</version.groovy>
+    <version.groovy-eclipse-compiler>3.7.0</version.groovy-eclipse-compiler>
+    <version.groovy-eclipse-batch>3.0.8-01</version.groovy-eclipse-batch>
+
+    <version.spock>2.1-M2-groovy-3.0</version.spock>
+
+    <!-- 2.0.7 contains an important bug fix making '@Rule PowerMockRule' usable from Spock -->
+    <version.powermock>2.0.9</version.powermock>
 
     <version.easymock>4.0.1</version.easymock>
 
+    <version.jmockit>1.49</version.jmockit>
+
+    <version.surefire>2.22.2</version.surefire>
+    <!--<version.surefire>3.0.0-M5</version.surefire>-->
+    <!-- Cannot use snapshot due to https://issues.apache.org/jira/browse/SUREFIRE-1882 -->
+    <!--<version.surefire>3.0.0-M6-SNAPSHOT</version.surefire>-->
+
+    <instrumented-jre.jar>
+      ${projectRootDir}/instrument-jre-classes/target/instrument-jre-classes-${project.version}.jar
+    </instrumented-jre.jar>
+
+    <bytebuddy.version>1.12.7</bytebuddy.version>
+    <bytebuddy.jar>
+      ${settings.localRepository}/net/bytebuddy/byte-buddy/${bytebuddy.version}/byte-buddy-${bytebuddy.version}.jar
+    </bytebuddy.jar>
+
+    <sarek.version>1.0-SNAPSHOT</sarek.version>
+    <sarek.jar>
+      ${settings.localRepository}/dev/sarek/sarek-special/${sarek.version}/sarek-special-${sarek.version}.jar
+    </sarek.jar>
   </properties>
 
   <build>
+    <pluginManagement>
+
+      <plugins>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.8.1</version>
+          <configuration>
+            <source>${maven.compiler.source}</source>
+            <target>${maven.compiler.target}</target>
+            <encoding>UTF8</encoding>
+            <compilerId>groovy-eclipse-compiler</compilerId>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.codehaus.groovy</groupId>
+              <artifactId>groovy-eclipse-compiler</artifactId>
+              <version>${version.groovy-eclipse-compiler}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.codehaus.groovy</groupId>
+              <artifactId>groovy-eclipse-batch</artifactId>
+              <version>${version.groovy-eclipse-batch}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+
+<!--
+        <plugin>
+          <groupId>org.codehaus.groovy</groupId>
+          <artifactId>groovy-eclipse-compiler</artifactId>
+          <version>${version.groovy-eclipse-compiler}</version>
+          <extensions>true</extensions>
+        </plugin>
+-->
+
+        <!--
+          Below version 2.22.0 Surefire will not execute Spock 2 tests,
+          but e.g Maven 3.5.2 and 3.6.0 use Surefire 2.12.4 by default.
+        -->
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${version.surefire}</version>
+          <configuration>
+            <!-- Do not reuse forked VMs because of potentially unexpected instrumentation bleed-over -->
+            <reuseForks>false</reuseForks>
+            <argLine>
+              -Dfile.encoding=UTF8
+
+              <!--
+                On Java 9+ you cannot prepend to the bootstrap classpath anymore, only append.
+                Instead, you can patch each module separately via:
+                  -'-patch-module <module>=<file>(<pathsep><file>)*
+                See http://openjdk.java.net/jeps/261#Patching-module-content.
+              -->
+              <!-- Java < 9 -->
+<!--               -Xbootclasspath/p:${instrumented-jre.jar}-->
+              <!-- Java 9+ -->
+              --patch-module java.base=${instrumented-jre.jar}
+
+              <!-- Java 9+: needed for hot-attaching agents (e.g. PowerMock) -->
+              -Djdk.attach.allowAttachSelf=true
+
+              <!-- Java 16+ -->
+              --add-opens java.base/java.lang=ALL-UNNAMED
+              --add-opens java.base/java.lang.ref=ALL-UNNAMED
+              --add-opens java.base/java.io=ALL-UNNAMED
+
+              <!---javaagent:"${settings.localRepository}/org/jmockit/jmockit/${version.jmockit}/jmockit-${version.jmockit}.jar"-->
+
+              <!--
+                The combination Sarek + PowerMock on JDK 8 only works when using the Java agent,
+                not the Spock or TestNG plugins (https://github.com/raphw/byte-buddy/issues/1191).
+                On JDK 9+, it also works with the plugins.
+              -->
+<!--              -javaagent:"${sarek.jar}=UnFinal,verbXXXose"-->
+            </argLine>
+            <systemPropertyVariables>
+              <!-- Necessary for SarekJUnit5Extension auto-detection -->
+              <junit.jupiter.extensions.autodetection.enabled>true</junit.jupiter.extensions.autodetection.enabled>
+            </systemPropertyVariables>
+          </configuration>
+        </plugin>
+
+        <!--
+          Below version 2.22.0 Failsafe will not execute Spock 2 tests,
+          but e.g Maven 3.5.2 and 3.6.0 use Failsafe 2.12.4 by default.
+        -->
+        <plugin>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>${version.surefire}</version>
+          <configuration>
+            <!-- Do not reuse forked VMs because of potentially unexpected instrumentation bleed-over -->
+            <reuseForks>false</reuseForks>
+            <argLine>
+              <!---Dfile.encoding=UTF8-->
+              <!---javaagent:"${settings.localRepository}"/org/jmockit/jmockit/${version.jmockit}/jmockit-${version.jmockit}.jar-->
+            </argLine>
+            <systemPropertyVariables>
+              <!-- Necessary for SarekJUnit5Extension auto-detection -->
+              <junit.jupiter.extensions.autodetection.enabled>true</junit.jupiter.extensions.autodetection.enabled>
+            </systemPropertyVariables>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>3.0.0-M3</version>
+          <executions>
+            <execution>
+              <id>enforce-versions</id>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+              <configuration>
+                <rules>
+                  <!-- We use compiler source/target 8 -> enforce Java 8+ -->
+                  <requireJavaVersion>
+                    <version>1.8</version>
+                  </requireJavaVersion>
+                  <!-- maven.multiModuleProjectDirectory: introduced in 3.3.1, important bug fix in 3.3.9 -->
+                  <requireMavenVersion>
+                    <version>3.3.9</version>
+                  </requireMavenVersion>
+                </rules>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <!-- Version 3.2.0 fixes goal 'rootlocation' -->
+          <version>3.2.0</version>
+        </plugin>
+
+      </plugins>
+    </pluginManagement>
+
     <plugins>
+
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
-        <configuration>
-          <source>${maven.compiler.source}</source>
-          <target>${maven.compiler.target}</target>
-          <encoding>UTF8</encoding>
-          <compilerId>groovy-eclipse-compiler</compilerId>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-eclipse-compiler</artifactId>
-            <version>${version.groovy-eclipse-compiler}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-eclipse-batch</artifactId>
-            <version>${version.groovy-eclipse-batch}</version>
-          </dependency>
-        </dependencies>
+        <artifactId>maven-enforcer-plugin</artifactId>
       </plugin>
+
       <plugin>
-        <groupId>org.codehaus.groovy</groupId>
-        <artifactId>groovy-eclipse-compiler</artifactId>
-        <version>${version.groovy-eclipse-compiler}</version>
-        <extensions>true</extensions>
-      </plugin>
-      <!--
-        Below version 2.22.0 Surefire will not execute Spock 2 tests,
-        but e.g Maven 3.5.2 and 3.6.0 use Surefire 2.12.4 by default.
-      -->
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.22.2</version>
-      </plugin>
-      <plugin>
-        <groupId>com.jolira</groupId>
-        <artifactId>onejar-maven-plugin</artifactId>
-        <version>1.4.4</version>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
           <execution>
+            <id>set-project-root-dir</id>
+            <phase>validate</phase>
             <goals>
-              <goal>one-jar</goal>
+              <!--
+                TODO:
+                  Investigate Directory Maven Plugin as an alternative, also with regard to IDEA compatibility
+                  (needs .mvn/jvm.config?). https://github.com/jdcasey/directory-maven-plugin#highest-basedir-goal
+              -->
+              <goal>rootlocation</goal>
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <onejarVersion>0.96</onejarVersion>
-          <mainClass>de.scrum_master.spock_powermock.Application</mainClass>
-          <attachToBuild>true</attachToBuild>
-        </configuration>
       </plugin>
+
     </plugins>
+
   </build>
 
   <dependencyManagement>
@@ -159,7 +318,10 @@
         <scope>test</scope>
       </dependency>
 
-      <!-- JUnit 4 agent-based @Rule PowermockRule is the only working option in Spock 2 -->
+      <!--
+        JUnit 4 agent-based @Rule PowermockRule is the only working option in Spock 2,
+        but due to https://github.com/raphw/byte-buddy/issues/1191 only on JRE 9+
+      -->
       <dependency>
         <groupId>org.powermock</groupId>
         <artifactId>powermock-module-junit4-rule-agent</artifactId>
@@ -167,62 +329,97 @@
         <scope>test</scope>
       </dependency>
 
+      <!-- JMockit agent for mocking final classes/methods -->
+      <dependency>
+        <groupId>org.jmockit</groupId>
+        <artifactId>jmockit</artifactId>
+        <version>${version.jmockit}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>de.scrum-master</groupId>
+        <artifactId>bytebuddy-agent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>dev.sarek</groupId>
+        <artifactId>sarek-special</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>dev.sarek</groupId>
+        <artifactId>sarek-junit4-runner</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>dev.sarek</groupId>
+        <artifactId>sarek-spock-extension</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>dev.sarek</groupId>
+        <artifactId>sarek-junit5-extension</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>${bytebuddy.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-agent</artifactId>
+        <version>${bytebuddy.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>de.scrum-master.spock</groupId>
+        <artifactId>instrument-jre-classes</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <scope>test</scope>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
-  <dependencies>
+  <modules>
+    <module>instrument-jre-classes</module>
+    <module>perform-tests</module>
+    <module>kotlin-sample</module>
+  </modules>
 
-    <!-- Groovy -->
-    <dependency>
-      <groupId>org.codehaus.groovy</groupId>
-      <artifactId>groovy</artifactId>
-    </dependency>
+  <!--
+    Caveat: Automatic, JDK-based profile activation can *not* be inherited by child POMs defining
+    the same profiles. Thus, we have to repeat activation conditions there.
 
-    <!-- Spock -->
-    <dependency>
-      <groupId>org.spockframework</groupId>
-      <artifactId>spock-core</artifactId>
-    </dependency>
-    <!--
-      JUnit 4 compatibility layer is needed for @Rule PowermockRule.
-      Please keep even though reported as unused by dependency:analyze!
-    -->
-    <dependency>
-      <groupId>org.spockframework</groupId>
-      <artifactId>spock-junit4</artifactId>
-    </dependency>
-    <!-- JUnit 4 version used by Spock, needed for @Rule PowermockRule -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    </dependency>
-
-    <!-- PowerMock -->
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-core</artifactId>
-    </dependency>
-    <!-- PowerMock Mockito 2 API -->
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-mockito2</artifactId>
-    </dependency>
-    <!-- PowerMock EasyMock API -->
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-easymock</artifactId>
-    </dependency>
-    <!-- EasyMock version used by PowerMock -->
-    <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
-    </dependency>
-    <!-- JUnit 4 agent-based @Rule PowermockRule is the only working option in Spock 2 -->
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4-rule-agent</artifactId>
-    </dependency>
-
-  </dependencies>
+    Note: We can check if automatic profile activation works via mvn help:active-profiles.
+  -->
+  <profiles>
+    <profile>
+      <id>jdk-8</id>
+      <activation>
+        <jdk>[1.8,1.9)</jdk>
+      </activation>
+    </profile>
+    <profile>
+      <id>jdk-9</id>
+      <activation>
+        <jdk>[1.9,)</jdk>
+      </activation>
+    </profile>
+    <profile>
+      <id>jdk-16-to-xx</id>
+      <activation>
+        <jdk>[16,)</jdk>
+      </activation>
+    </profile>
+  </profiles>
 
 </project>

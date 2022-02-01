@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>de.scrum-master.spock</groupId>
+    <artifactId>spock-powermock</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>perform-tests</artifactId>
+
+  <dependencies>
+
+    <!-- Groovy -->
+    <dependency>
+      <groupId>org.codehaus.groovy</groupId>
+      <artifactId>groovy</artifactId>
+    </dependency>
+
+    <!-- Spock -->
+    <dependency>
+      <groupId>org.spockframework</groupId>
+      <artifactId>spock-core</artifactId>
+    </dependency>
+    <!--
+      JUnit 4 compatibility layer is needed for @Rule PowermockRule.
+      Please keep even though reported as unused by dependency:analyze!
+    -->
+    <dependency>
+      <groupId>org.spockframework</groupId>
+      <artifactId>spock-junit4</artifactId>
+    </dependency>
+    <!-- JUnit 4 version used by Spock, needed for @Rule PowermockRule -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+
+    <!-- PowerMock -->
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-core</artifactId>
+    </dependency>
+    <!-- PowerMock Mockito 2 API -->
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito2</artifactId>
+    </dependency>
+    <!-- PowerMock EasyMock API -->
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-easymock</artifactId>
+    </dependency>
+    <!-- EasyMock version used by PowerMock -->
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+    </dependency>
+    <!-- JUnit 4 agent-based @Rule PowermockRule is the only working option in Spock 2 -->
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4-rule-agent</artifactId>
+    </dependency>
+
+    <!-- JMockit agent for mocking final classes/methods -->
+    <dependency>
+      <groupId>org.jmockit</groupId>
+      <artifactId>jmockit</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>de.scrum-master.spock</groupId>
+      <artifactId>instrument-jre-classes</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.scrum-master.spock</groupId>
+      <artifactId>kotlin-sample</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>dev.sarek</groupId>
+      <artifactId>sarek-special</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!--
+      The combination Sarek + PowerMock on JDK 8 only works when using the Java agent,
+      not the Spock or TestNG plugins (https://github.com/raphw/byte-buddy/issues/1191).
+      On JDK 9+, it also works with the plugins.
+    -->
+    <dependency>
+      <groupId>dev.sarek</groupId>
+      <artifactId>sarek-junit4-runner</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>dev.sarek</groupId>
+      <artifactId>sarek-spock-extension</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>dev.sarek</groupId>
+      <artifactId>sarek-junit5-extension</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>dev.sarek</groupId>
+      <artifactId>sarek-testng-extension</artifactId>
+      <version>${sarek.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.bytebuddy</groupId>
+      <artifactId>byte-buddy-agent</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.11.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${version.junit}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- JUnit 5 Jupiter API for Sarek extension  -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${version.junit}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>${version.testng}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JUnit 5 Jupiter platform launcher for Spock EmbeddedSpecRunner  -->
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <version>${version.junit-platform}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-testkit</artifactId>
+      <version>${version.junit-platform}</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+<!--
+      <plugin>
+        <groupId>org.codehaus.groovy</groupId>
+        <artifactId>groovy-eclipse-compiler</artifactId>
+      </plugin>
+-->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <!--
+          Configure two executions:
+            - default-test for JUnit 5 (incl. Spock)
+            - testng-test for TestNG (incl. JUnit 4)
+          See https://issues.apache.org/jira/browse/SUREFIRE-377?focusedCommentId=14456950&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-14456950
+        -->
+        <executions>
+          <execution>
+            <id>default-test</id>
+            <phase>test</phase>
+<!--            <phase>none</phase>-->
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <testNGArtifactName>none:none</testNGArtifactName>
+              <excludes>
+                <exclude>**/*TestNG*</exclude>
+                <exclude>**/*JUnit4*</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>testng-test</id>
+            <phase>test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <junitArtifactName>none:none</junitArtifactName>
+              <includes>
+                <include>**/*TestNG*</include>
+                <include>**/*JUnit4*</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <!--
+          Configure one execution for JUnit 5 (incl. Spock), excluding TestNG engine.
+          A second TestNG execution similar to Surefire is unnecessary because there are no TestNG ITs.
+          See https://issues.apache.org/jira/browse/SUREFIRE-377?focusedCommentId=14456950&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-14456950
+        -->
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+            <configuration>
+              <testNGArtifactName>none:none</testNGArtifactName>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

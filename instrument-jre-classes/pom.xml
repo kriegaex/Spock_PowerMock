@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>de.scrum-master.spock</groupId>
+    <artifactId>spock-powermock</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>instrument-jre-classes</artifactId>
+
+  <!--
+    Caveat: Automatic, JDK-based profile activation can *not* be inherited from a parent POM
+    if we define the same profiles again. Thus, we have to repeat activation conditions there.
+  -->
+  <profiles>
+
+    <profile>
+      <id>jdk-8</id>
+      <activation>
+        <jdk>[1.8,1.9)</jdk>
+      </activation>
+
+      <properties>
+        <jre-unpack.directory>${project.build.directory}/jre-unpack</jre-unpack.directory>
+        <maven-failsafe.argLine>-Xbootclasspath/p:${instrumented-jre.jar}</maven-failsafe.argLine>
+      </properties>
+
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>unpack-java-runtime</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <!--
+                      Extract (superset of) target classes for instrumentation from <JDK_DIR>/lib/rt.jar
+                      into directory target/jre-unpack. The result will be a directory structure like this:
+                        com
+                        java
+                          lang
+                            String.class
+                          net
+                            URL.class
+                          util
+                            StringJoiner.class
+                            UUID.class
+                        (...)
+                    -->
+                    <unzip
+                      src="${java.home}/lib/rt.jar"
+                      dest="${project.build.directory}/jre-unpack"
+                      overwrite="false"
+                    >
+                      <patternset>
+                        <include name="java/lang/**"/>
+                        <include name="java/util/**"/>
+                        <include name="java/net/**"/>
+                        <include name="java/io/**"/>
+                      </patternset>
+                    </unzip>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+
+    </profile>
+
+    <profile>
+      <id>jdk-9</id>
+      <activation>
+        <jdk>[1.9,)</jdk>
+      </activation>
+
+      <properties>
+        <jre-unpack.directory>${project.build.directory}/jre-unpack/java.base</jre-unpack.directory>
+        <maven-failsafe.argLine>
+          --patch-module java.base=${instrumented-jre.jar}
+          --add-opens java.base/java.lang=ALL-UNNAMED
+        </maven-failsafe.argLine>
+      </properties>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>unpack-java-modules</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>bsh-property</goal>
+                </goals>
+                <!--
+                  Extract (superset of) target classes for instrumentation from <JDK_DIR>/lib/modules
+                  into directory target/jre-unpack. The result will be a sub directory structure of classes
+                  per Java module, e.g.
+                    java.base
+                      com
+                      java
+                        lang
+                          String.class
+                        net
+                          URL.class
+                        util
+                          StringJoiner.class
+                          UUID.class
+                    java.net.http
+                      java
+                        net
+                    (...)
+
+                  Because the Maven JMOD Plugin is basically dead - no updated alpha version since 2017-09,
+                  see https://maven.apache.org/plugins/maven-jmod-plugin/ - and the current release only supports
+                  creating JMODs, not unpacking them, we have to use a BeanShell script in order to call JDK tools
+                  like jmod(.exe) or jimage(.exe) in order to extract class files from *.jmod files or from the
+                  compound modules JIMAGE file instead. This is kinda ugly and also platform-specific (I only
+                  implemented it for Windows), but I see no other way for now.
+
+                  You can already pre-filter module and package names you like unpacked via a regex matching parts
+                  of the folder and class name structure. In the script you can adjust it as needed, e.g.:
+                    // All modules, all packages
+                    includeExpression = quote("regex:.*");
+                    // All modules, packages java.{lang|util|net|io}
+                    includeExpression = quote("regex:.*/java/(lang|util|net|io)/.*");
+                    // Only module java.base, packages java.{lang|util|net|io}
+                    includeExpression = quote("regex:/java.base/java/(lang|util|net|io)/.*");
+
+                  You can check 'includeExpression' without extracting any class files if you temporarily
+                  change 'subCommand' to:
+                    subCommand = " list";
+                -->
+                <configuration>
+                  <source><![CDATA[
+                    String quote(String text) {
+                      return "\"" + text + "\"";
+                    }
+
+                    targetDir = project.getBuild().getDirectory().replace('\\', '/');
+                    unpackDir = quote(targetDir + "/jre-unpack");
+                    javaHome = System.getProperty("java.home").replace('\\', '/');
+                    jimageExe = quote(javaHome + "/bin/jimage.exe");
+                    modulesFile = quote(javaHome + "/lib/modules");
+
+                    includeExpression = quote("regex:/java.base/java/(lang|util|net|io)/.*");
+                    subCommand = " extract --dir " + unpackDir;
+
+                    command = jimageExe + subCommand + " --include " + includeExpression + " " + modulesFile;
+                    print(command);
+                    exec(command);
+                  ]]></source>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+
+    </profile>
+
+  </profiles>
+
+  <build>
+
+    <resources>
+      <!--
+        Copy a subset of the unpacked class files to target/classes in order to later instrument them
+        via ByteBuddy Maven Plugin
+      -->
+      <resource>
+        <directory>${jre-unpack.directory}</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>java/lang/String.class</include>
+          <include>java/util/StringJoiner.class</include>
+          <include>java/util/UUID.class</include>
+          <include>java/net/URL.class</include>
+<!--          <include>java/io/ObjectOutputStream.class</include>-->
+        </includes>
+      </resource>
+    </resources>
+
+    <plugins>
+
+      <plugin>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-maven-plugin</artifactId>
+        <version>${bytebuddy.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>transform</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <warnOnMissingOutputDirectory>true</warnOnMissingOutputDirectory>
+          <initialization>
+            <entryPoint>DECORATE</entryPoint>
+          </initialization>
+          <transformations>
+            <transformation>
+              <plugin>dev.sarek.agent.unfinal.UnFinalPlugin</plugin>
+            </transformation>
+          </transformations>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>dev.sarek</groupId>
+            <artifactId>sarek-unfinal-plugin</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <argLine>${maven-failsafe.argLine}</argLine>
+        </configuration>
+      </plugin>
+
+    </plugins>
+
+  </build>
+
+</project>
