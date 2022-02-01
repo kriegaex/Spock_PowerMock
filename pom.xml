@@ -41,9 +41,9 @@
 
     <version.testng>7.1.0</version.testng>
 
-    <version.groovy>3.0.9</version.groovy>
-    <version.groovy-eclipse-compiler>3.7.0</version.groovy-eclipse-compiler>
-    <version.groovy-eclipse-batch>3.0.8-01</version.groovy-eclipse-batch>
+    <version.groovy>4.0.0</version.groovy>
+    <version.groovy-eclipse-compiler>3.7.1</version.groovy-eclipse-compiler>
+    <version.groovy-eclipse-batch>4.0.0-02</version.groovy-eclipse-batch>
 
     <version.spock>2.1-M2-groovy-3.0</version.spock>
 
@@ -73,6 +73,13 @@
       ${settings.localRepository}/dev/sarek/sarek-special/${sarek.version}/sarek-special-${sarek.version}.jar
     </sarek.jar>
   </properties>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>groovy-plugins-release</id>
+      <url>https://groovy.jfrog.io/artifactory/plugins-release</url>
+    </pluginRepository>
+  </pluginRepositories>
 
   <build>
     <pluginManagement>
@@ -258,7 +265,7 @@
 
       <!-- Groovy -->
       <dependency>
-        <groupId>org.codehaus.groovy</groupId>
+        <groupId>org.apache.groovy</groupId>
         <artifactId>groovy</artifactId>
         <version>${version.groovy}</version>
         <scope>test</scope>
@@ -270,6 +277,13 @@
         <artifactId>spock-core</artifactId>
         <version>${version.spock}</version>
         <scope>test</scope>
+        <exclusions>
+          <!-- TODO not have conflicting Groovy versions - Groovy 4 changed groupId from "org.codehaus.groovy" to "org.apache.groovy" -->
+          <exclusion>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <!--
         JUnit 4 compatibility layer is needed for @Rule PowermockRule.
@@ -280,6 +294,13 @@
         <artifactId>spock-junit4</artifactId>
         <version>${version.spock}</version>
         <scope>test</scope>
+        <exclusions>
+          <!-- TODO not have conflicting Groovy versions - Groovy 4 changed groupId from "org.codehaus.groovy" to "org.apache.groovy" -->
+          <exclusion>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <!-- JUnit 4 version used by Spock, needed for @Rule PowermockRule -->
       <dependency>
