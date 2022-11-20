@@ -41,11 +41,11 @@
 
     <version.testng>7.1.0</version.testng>
 
-    <version.groovy>4.0.0</version.groovy>
-    <version.groovy-eclipse-compiler>3.7.1</version.groovy-eclipse-compiler>
-    <version.groovy-eclipse-batch>4.0.0-02</version.groovy-eclipse-batch>
+    <version.groovy>4.0.6</version.groovy>
+    <version.groovy-eclipse-compiler>3.8.0</version.groovy-eclipse-compiler>
+    <version.groovy-eclipse-batch>4.0.6-02</version.groovy-eclipse-batch>
 
-    <version.spock>2.1-M2-groovy-3.0</version.spock>
+    <version.spock>2.3-groovy-4.0-SNAPSHOT</version.spock>
 
     <!-- 2.0.7 contains an important bug fix making '@Rule PowerMockRule' usable from Spock -->
     <version.powermock>2.0.9</version.powermock>
@@ -54,10 +54,7 @@
 
     <version.jmockit>1.49</version.jmockit>
 
-    <version.surefire>2.22.2</version.surefire>
-    <!--<version.surefire>3.0.0-M5</version.surefire>-->
-    <!-- Cannot use snapshot due to https://issues.apache.org/jira/browse/SUREFIRE-1882 -->
-    <!--<version.surefire>3.0.0-M6-SNAPSHOT</version.surefire>-->
+    <version.surefire>3.0.0-M7</version.surefire>
 
     <instrumented-jre.jar>
       ${projectRootDir}/instrument-jre-classes/target/instrument-jre-classes-${project.version}.jar
@@ -74,10 +71,33 @@
     </sarek.jar>
   </properties>
 
+  <repositories>
+    <repository>
+      <id>sonatype-snapshots</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
   <pluginRepositories>
     <pluginRepository>
       <id>groovy-plugins-release</id>
       <url>https://groovy.jfrog.io/artifactory/plugins-release</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>apache-snapshots</id>
+      <url>https://repository.apache.org/snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
     </pluginRepository>
   </pluginRepositories>
 
@@ -277,13 +297,6 @@
         <artifactId>spock-core</artifactId>
         <version>${version.spock}</version>
         <scope>test</scope>
-        <exclusions>
-          <!-- TODO not have conflicting Groovy versions - Groovy 4 changed groupId from "org.codehaus.groovy" to "org.apache.groovy" -->
-          <exclusion>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <!--
         JUnit 4 compatibility layer is needed for @Rule PowermockRule.
@@ -294,13 +307,6 @@
         <artifactId>spock-junit4</artifactId>
         <version>${version.spock}</version>
         <scope>test</scope>
-        <exclusions>
-          <!-- TODO not have conflicting Groovy versions - Groovy 4 changed groupId from "org.codehaus.groovy" to "org.apache.groovy" -->
-          <exclusion>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <!-- JUnit 4 version used by Spock, needed for @Rule PowermockRule -->
       <dependency>
