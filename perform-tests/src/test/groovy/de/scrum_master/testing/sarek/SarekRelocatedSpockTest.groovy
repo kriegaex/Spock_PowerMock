@@ -43,6 +43,9 @@ class SarekRelocatedSpockTest extends Specification {
     new UnderTest(new Collaborator()).finalMethod() == "final method"
   }
 
+  /**
+   * Needs either Sarek Spock extension or Sarek Java agent on command line
+   */
   def canMockBootstrapClasses_Swing() {
     given:
     MockFactory<JTable> mockFactory1 = MockFactory.forClass(JTable).mockConstructors().addGlobalInstance().build()

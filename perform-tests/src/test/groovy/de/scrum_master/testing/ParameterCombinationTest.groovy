@@ -2,7 +2,7 @@ package de.scrum_master.testing
 
 import spock.lang.Specification
 
-class RepeatedTest extends Specification {
+class ParameterCombinationTest extends Specification {
   def "test run #run, parameters [#param1, #param2]"() {
     // See https://github.com/spockframework/spock/issues/1285#issuecomment-790764765
     where:

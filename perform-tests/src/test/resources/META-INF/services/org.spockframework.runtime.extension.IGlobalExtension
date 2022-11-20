@@ -1,0 +1,3 @@
+# TODO: setup() output suppressed when active
+de.scrum_master.testing.extension.ConcurrentSystemOutErrExtension
+#de.scrum_master.testing.extension.ConcurrentSystemOutErrJUnit5Extension

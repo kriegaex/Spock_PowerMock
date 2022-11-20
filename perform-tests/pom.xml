@@ -158,6 +158,40 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- https://stackoverflow.com/q/71081881/1082681 -->
+    <dependency>
+      <groupId>com.hierynomus</groupId>
+      <artifactId>sshj</artifactId>
+      <version>0.32.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.stefanbirkner</groupId>
+      <artifactId>fake-sftp-server-lambda</artifactId>
+      <version>2.0.1-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- https://stackoverflow.com/q/71122575/1082681 -->
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy-json</artifactId>
+      <version>${version.groovy}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!--
+      Reproduce problem from Gitter chat, author Alessandro Morsiani @Alessandro1985, 2022-07-08.
+      Also deactivate global extensions like ConcurrentSystemOutErrExtension.
+      Then run a simple test like FooBarTest.
+    -->
+    <!--
+    <dependency>
+      <groupId>org.codehaus.mojo.groovy</groupId>
+      <artifactId>groovy-mojo-support</artifactId>
+      <version>1.0-beta-3</version>
+    </dependency>
+    -->
+
   </dependencies>
 
   <build>
@@ -189,6 +223,14 @@
               <goal>test</goal>
             </goals>
             <configuration>
+              <!--<groups>included,fast,parent</groups>-->
+              <excludedGroups>excluded,slow,failing</excludedGroups>
+              <properties>
+                <configurationParameters>
+                  junit.platform.output.capture.stdout=true
+                  junit.platform.output.capture.stderr=true
+                </configurationParameters>
+              </properties>
               <testNGArtifactName>none:none</testNGArtifactName>
               <excludes>
                 <exclude>**/*TestNG*</exclude>
@@ -198,7 +240,8 @@
           </execution>
           <execution>
             <id>testng-test</id>
-            <phase>test</phase>
+<!--            <phase>test</phase>-->
+            <phase>none</phase>
             <goals>
               <goal>test</goal>
             </goals>

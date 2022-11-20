@@ -10,6 +10,6 @@ class SpockSettings {
     inputStream.close()
     //properties.list(System.out)
     //System.properties.list(System.out)
-    Boolean.valueOf(properties["spock.skip.slow"])
+    Boolean.valueOf(properties["spock.skip.slow"] as String)
   }
 }
